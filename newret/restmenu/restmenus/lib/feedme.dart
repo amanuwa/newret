@@ -62,11 +62,13 @@ class _FeedMeState extends State<FeedMe> {
     }
   }
 List jsonfeedback =[];
+List catagorylist=[];
   getFeedbackFromSheet() async {
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbxTLRLE5HWISOoNa4Lpg_NHcdW-CysDfrWcnOCHFgD31Gx1RYr5RQf1sxuIds1UB6XM/exec');
     var response = await http.get(url);
      jsonfeedback = convert.jsonDecode(response.body);
+  
 
       List namesList = jsonfeedback[0].map((item) => item['name'].toString()).toList();
   List idsList = jsonfeedback[0].map((item) => item['id'] as int).toList();
@@ -76,7 +78,9 @@ List jsonfeedback =[];
   List  pricesList = jsonfeedback[0].map((item) => item['price'] as int).toList();
   
 
-     print(videosList);
+    catagorylist=jsonfeedback[2].map((item) => item['name'].toString()).toList();
+
+  
   }
 
 
@@ -193,10 +197,12 @@ List jsonfeedback =[];
                   crossAxisSpacing: 10.0,
                   mainAxisSpacing: 10.0,
                 ),
-                itemCount: lang.length,
+                itemCount: catagorylist.length,
                 itemBuilder: (context, index) {
                   return ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      print('$index');
+                    },
                     style: ElevatedButton.styleFrom(
                       primary: const Color.fromARGB(255, 12, 56, 92),
                       shape: RoundedRectangleBorder(
@@ -206,7 +212,7 @@ List jsonfeedback =[];
                     ),
                     child: Center(
                       child: Text(
-                        lang[index],
+                        catagorylist[index],
                         style: TextStyle(
                           fontSize: wdth * 0.03,
                           color: Colors.white,
