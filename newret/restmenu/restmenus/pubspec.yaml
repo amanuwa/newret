@@ -42,7 +42,7 @@ dev_dependencies:
     sdk: flutter
   easy_localization: ^3.0.3
   http: ^1.2.0
-  youtube_player_flutter: ^8.1.2
+  video_player: ^2.8.2  
 
 
   

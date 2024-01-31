@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
-import 'package:youtube_player_flutter/youtube_player_flutter.dart'; // Import from youtube_player_flutter
-
+//import 'package:youtube_player_flutter/youtube_player_flutter.dart'; // Import from youtube_player_flutter
+import 'package:video_player/video_player.dart';
 import 'package:restmenus/feedback_model.dart';
 
 class FeedMe extends StatefulWidget {
@@ -18,20 +18,8 @@ class _FeedMeState extends State<FeedMe> {
   String selectedLang = "";
   List<FeedbackModel> feedbacks = [];
 
-  late List<String> youtubeVideoIds = [
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-    'kRCH8kD1GD0',
-  ];
-  late List<YoutubePlayerController> controllers;
+ 
+ // late List<YoutubePlayerController> controllers;
   final ScrollController _controller = ScrollController();
   bool stopScrolling = false;
   bool _firstIteration = true;
@@ -61,14 +49,24 @@ class _FeedMeState extends State<FeedMe> {
       });
     }
   }
+  List <dynamic> specialnames = [];
+  List <dynamic> specialid = [];
+  List <dynamic> specialingredients = [];
+  List <dynamic> specialvideos= [];
+ List <dynamic> specialvideos11= [];
+  List <dynamic> specialprices = [];
 List jsonfeedback =[];
 List catagorylist=[];
+
+late List<VideoPlayerController> _controllers;
+  late List<Future<void>> _initializeVideoPlayerFutures;
+
   getFeedbackFromSheet() async {
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbxTLRLE5HWISOoNa4Lpg_NHcdW-CysDfrWcnOCHFgD31Gx1RYr5RQf1sxuIds1UB6XM/exec');
     var response = await http.get(url);
      jsonfeedback = convert.jsonDecode(response.body);
-  
+  print(jsonfeedback.length);
 
       List namesList = jsonfeedback[0].map((item) => item['name'].toString()).toList();
   List idsList = jsonfeedback[0].map((item) => item['id'] as int).toList();
@@ -79,8 +77,13 @@ List catagorylist=[];
   
 
     catagorylist=jsonfeedback[2].map((item) => item['name'].toString()).toList();
-
-  
+specialnames = jsonfeedback[3].map((item) => item['name'].toString()).toList();
+   specialid = jsonfeedback[3].map((item) => item['id'].toString()).toList();
+   specialingredients = jsonfeedback[3].map((item) => item['ingredients'].toString()).toList();
+    specialvideos= jsonfeedback[3].map((item) => item['video'].toString()).toList();
+ 
+    specialprices = jsonfeedback[3].map((item) => item['price'].toString()).toList();
+   
   }
 
 
@@ -88,27 +91,57 @@ List catagorylist=[];
   void initState() {
     super.initState();
 
-    controllers = youtubeVideoIds.map((videoId) {
-      return YoutubePlayerController(
-        initialVideoId: videoId,
-        flags: YoutubePlayerFlags(
-          autoPlay: true,
-          mute: true,
-          loop: true,
-        ),
-      );
-    }).toList();
-    getFeedbackFromSheet();
-   //  getcatagorylist();
-
-    Timer.periodic(const Duration(seconds: 4), (Timer timer) {
-      _scrollListView();
+    FetchData();
+  
+  }
+   bool _dataLoaded = false;
+Future<void> FetchData() async {
+    await getFeedbackFromSheet();
+     setState(() {
+      _dataLoaded = true;
     });
+    if (_dataLoaded) {
+   //   _scrollListView();
+
+      Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+        _scrollListView();
+      });
+
+ initializeVideoPlayers();
+    }
   }
 
-  @override
+Future<void> initializeVideoPlayers() async {
+  try {
+    _controllers = specialvideos
+        .map((path) => VideoPlayerController.network(path)..setLooping(true))
+        .toList();
+
+    _initializeVideoPlayerFutures =
+        _controllers.map((controller) => controller.initialize()).toList();
+
+    await Future.wait(_initializeVideoPlayerFutures);
+    print(specialvideos);
+
+    setState(() {
+      for (var controller in _controllers) {
+        controller.play();
+        controller.setLooping(true);
+      }
+    });
+  } catch (error) {
+    print('Error initializing video players: $error');
+  }
+}
+
+
+
+
+
+
+   @override
   void dispose() {
-    for (var controller in controllers) {
+    for (var controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
@@ -234,7 +267,7 @@ List catagorylist=[];
                     height: hight * 0.03,
                     width: wdth,
                     child: Text(
-                      'house Specials',
+                      'House Special',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: wdth * 0.04,fontWeight: FontWeight.bold
@@ -254,20 +287,20 @@ List catagorylist=[];
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         controller: _controller,
-                        itemCount: youtubeVideoIds.length,
+                        itemCount: specialvideos.length,
                         itemBuilder: (context, index) {
                           return Container(
                             margin: const EdgeInsets.all(1.0),
                             width: wdth * 0.4,
                             height: hight * 0.2,
-                            color: Color.fromARGB(255, 134, 131, 131),
+                            color: Color.fromARGB(255, 243, 231, 231),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                const Expanded(
+                                 Expanded(
                                   flex: 1,
                                   child: Text(
-                                    'data',style: TextStyle(fontWeight: FontWeight.bold),
+                                   specialnames[index],style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 Expanded(
@@ -275,16 +308,13 @@ List catagorylist=[];
                                   child: Container(
                                     height: hight * 0.1,
                                     color: Colors.purple,
-                                    child: YoutubePlayer(
-                                      controller: controllers[index],
-                                      showVideoProgressIndicator: true,
-                                    ),
+                                         child: VideoPlayerItem(controller: _controllers[index])
                                   ),
                                 ),
-                                const Expanded(
+                                 Expanded(
                                   flex: 1,
                                   child: Text(
-                                    '500 ETB', style: TextStyle(fontWeight: FontWeight.bold),
+                                    specialprices[index], style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 )
                               ],
@@ -337,6 +367,25 @@ List catagorylist=[];
           ],
         ),
       ),
+    );
+  }
+}
+
+class VideoPlayerItem extends StatefulWidget {
+  final VideoPlayerController controller;
+
+  const VideoPlayerItem({super.key, required this.controller});
+
+  @override
+  _VideoPlayerItemState createState() => _VideoPlayerItemState();
+}
+
+class _VideoPlayerItemState extends State<VideoPlayerItem> {
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: widget.controller.value.aspectRatio,
+      child: VideoPlayer(widget.controller),
     );
   }
 }
