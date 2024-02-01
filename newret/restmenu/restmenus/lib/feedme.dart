@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
-//import 'package:youtube_player_flutter/youtube_player_flutter.dart'; // Import from youtube_player_flutter
 import 'package:video_player/video_player.dart';
 import 'package:restmenus/feedback_model.dart';
+import 'dart:ui_web' as ui; 
 
 class FeedMe extends StatefulWidget {
   const FeedMe({Key? key});
@@ -18,8 +18,6 @@ class _FeedMeState extends State<FeedMe> {
   String selectedLang = "";
   List<FeedbackModel> feedbacks = [];
 
- 
- // late List<YoutubePlayerController> controllers;
   final ScrollController _controller = ScrollController();
   bool stopScrolling = false;
   bool _firstIteration = true;
@@ -49,65 +47,57 @@ class _FeedMeState extends State<FeedMe> {
       });
     }
   }
-  List <dynamic> specialnames = [];
-  List <dynamic> specialid = [];
-  List <dynamic> specialingredients = [];
-  List <dynamic> specialvideos= [];
- List <dynamic> specialvideos11= [];
-  List <dynamic> specialprices = [];
-List jsonfeedback =[];
-List catagorylist=[];
 
-late List<VideoPlayerController> _controllers;
+  List<dynamic> specialnames = [];
+  List<dynamic> specialid = [];
+  List<dynamic> specialingredients = [];
+  List<dynamic> specialvideos = [];
+  List<dynamic> specialprices = [];
+  List jsonfeedback = [];
+  List catagorylist = [];
+
+  late List<VideoPlayerController> _controllers;
   late List<Future<void>> _initializeVideoPlayerFutures;
 
   getFeedbackFromSheet() async {
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbxTLRLE5HWISOoNa4Lpg_NHcdW-CysDfrWcnOCHFgD31Gx1RYr5RQf1sxuIds1UB6XM/exec');
     var response = await http.get(url);
-     jsonfeedback = convert.jsonDecode(response.body);
-  print(jsonfeedback.length);
+    jsonfeedback = convert.jsonDecode(response.body);
+    print(jsonfeedback.length);
 
-      List namesList = jsonfeedback[0].map((item) => item['name'].toString()).toList();
-  List idsList = jsonfeedback[0].map((item) => item['id'] as int).toList();
-  List ingredientsList = jsonfeedback[0].map((item) => item['ingredients'].toString()).toList();
-  List  videosList = jsonfeedback[0].map((item) => item['video'].toString()).toList();
-  List  photosList = jsonfeedback[0].map((item) => item['photo'].toString()).toList();
-  List  pricesList = jsonfeedback[0].map((item) => item['price'] as int).toList();
-  
-
-    catagorylist=jsonfeedback[2].map((item) => item['name'].toString()).toList();
-specialnames = jsonfeedback[3].map((item) => item['name'].toString()).toList();
-   specialid = jsonfeedback[3].map((item) => item['id'].toString()).toList();
-   specialingredients = jsonfeedback[3].map((item) => item['ingredients'].toString()).toList();
-    specialvideos= jsonfeedback[3].map((item) => item['video'].toString()).toList();
- 
-    specialprices = jsonfeedback[3].map((item) => item['price'].toString()).toList();
-   
+    catagorylist =
+        jsonfeedback[2].map((item) => item['name'].toString()).toList();
+    specialnames =
+        jsonfeedback[3].map((item) => item['name'].toString()).toList();
+    specialid = jsonfeedback[3].map((item) => item['id'].toString()).toList();
+    specialingredients =
+        jsonfeedback[3].map((item) => item['ingredients'].toString()).toList();
+    specialvideos =
+        jsonfeedback[3].map((item) => item['video'].toString()).toList();
+    specialprices =
+        jsonfeedback[3].map((item) => item['price'].toString()).toList();
   }
-
 
   @override
   void initState() {
     super.initState();
-
     FetchData();
-  
   }
-   bool _dataLoaded = false;
-Future<void> FetchData() async {
+
+  bool _dataLoaded = false;
+
+  Future<void> FetchData() async {
     await getFeedbackFromSheet();
-     setState(() {
+    setState(() {
       _dataLoaded = true;
     });
     if (_dataLoaded) {
-   //   _scrollListView();
-
       Timer.periodic(const Duration(seconds: 3), (Timer timer) {
         _scrollListView();
       });
 
- initializeVideoPlayers();
+      initializeVideoPlayers();
     }
   }
 
@@ -121,7 +111,6 @@ Future<void> initializeVideoPlayers() async {
         _controllers.map((controller) => controller.initialize()).toList();
 
     await Future.wait(_initializeVideoPlayerFutures);
-    print(specialvideos);
 
     setState(() {
       for (var controller in _controllers) {
@@ -131,15 +120,13 @@ Future<void> initializeVideoPlayers() async {
     });
   } catch (error) {
     print('Error initializing video players: $error');
+
+    // You can add more specific error handling here if needed.
   }
 }
 
 
-
-
-
-
-   @override
+  @override
   void dispose() {
     for (var controller in _controllers) {
       controller.dispose();
@@ -269,9 +256,9 @@ Future<void> initializeVideoPlayers() async {
                     child: Text(
                       'House Special',
                       style: TextStyle(
-                        color: Colors.black,
-                        fontSize: wdth * 0.04,fontWeight: FontWeight.bold
-                      ),
+                          color: Colors.black,
+                          fontSize: wdth * 0.04,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                   Container(
@@ -297,10 +284,11 @@ Future<void> initializeVideoPlayers() async {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                 Expanded(
+                                Expanded(
                                   flex: 1,
                                   child: Text(
-                                   specialnames[index],style: TextStyle(fontWeight: FontWeight.bold),
+                                    specialnames[index],
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 Expanded(
@@ -308,13 +296,14 @@ Future<void> initializeVideoPlayers() async {
                                   child: Container(
                                     height: hight * 0.1,
                                     color: Colors.purple,
-                                         child: VideoPlayerItem(controller: _controllers[index])
+                                    child: VideoPlayerItem(controller: _controllers[index]),
                                   ),
                                 ),
-                                 Expanded(
+                                Expanded(
                                   flex: 1,
                                   child: Text(
-                                    specialprices[index], style: TextStyle(fontWeight: FontWeight.bold),
+                                    specialprices[index],
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 )
                               ],
@@ -374,7 +363,7 @@ Future<void> initializeVideoPlayers() async {
 class VideoPlayerItem extends StatefulWidget {
   final VideoPlayerController controller;
 
-  const VideoPlayerItem({super.key, required this.controller});
+  const VideoPlayerItem({Key? key, required this.controller});
 
   @override
   _VideoPlayerItemState createState() => _VideoPlayerItemState();
