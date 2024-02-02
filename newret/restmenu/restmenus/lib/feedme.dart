@@ -5,6 +5,8 @@ import 'dart:convert' as convert;
 import 'package:video_player/video_player.dart';
 import 'package:restmenus/feedback_model.dart';
 import 'dart:ui_web' as ui; 
+import 'package:chewie/chewie.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class FeedMe extends StatefulWidget {
   const FeedMe({Key? key});
@@ -65,8 +67,8 @@ class _FeedMeState extends State<FeedMe> {
     var response = await http.get(url);
     jsonfeedback = convert.jsonDecode(response.body);
     print(jsonfeedback.length);
-
-    catagorylist =
+    setState(() {
+      catagorylist = 
         jsonfeedback[2].map((item) => item['name'].toString()).toList();
     specialnames =
         jsonfeedback[3].map((item) => item['name'].toString()).toList();
@@ -77,29 +79,20 @@ class _FeedMeState extends State<FeedMe> {
         jsonfeedback[3].map((item) => item['video'].toString()).toList();
     specialprices =
         jsonfeedback[3].map((item) => item['price'].toString()).toList();
+    });
+
+    
+        print(catagorylist);
   }
 
   @override
   void initState() {
     super.initState();
-    FetchData();
+    getFeedbackFromSheet();
+    initializeVideoPlayers();
   }
 
-  bool _dataLoaded = false;
-
-  Future<void> FetchData() async {
-    await getFeedbackFromSheet();
-    setState(() {
-      _dataLoaded = true;
-    });
-    if (_dataLoaded) {
-      Timer.periodic(const Duration(seconds: 3), (Timer timer) {
-        _scrollListView();
-      });
-
-      initializeVideoPlayers();
-    }
-  }
+ 
 
 Future<void> initializeVideoPlayers() async {
   try {
@@ -116,6 +109,7 @@ Future<void> initializeVideoPlayers() async {
       for (var controller in _controllers) {
         controller.play();
         controller.setLooping(true);
+        controller.setVolume(0.0);
       }
     });
   } catch (error) {
@@ -124,15 +118,9 @@ Future<void> initializeVideoPlayers() async {
     // You can add more specific error handling here if needed.
   }
 }
+int focusedIndex = 0;
 
 
-  @override
-  void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -265,52 +253,49 @@ Future<void> initializeVideoPlayers() async {
                     width: wdth,
                     height: hight * 0.2,
                     margin: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+                    color: Colors.amber,
                     child: GestureDetector(
                       onTap: () {
-                        setState(() {
-                          stopScrolling = !stopScrolling;
-                        });
+                        
                       },
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        controller: _controller,
-                        itemCount: specialvideos.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: const EdgeInsets.all(1.0),
-                            width: wdth * 0.4,
-                            height: hight * 0.2,
-                            color: Color.fromARGB(255, 243, 231, 231),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    specialnames[index],
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 8,
-                                  child: Container(
-                                    height: hight * 0.1,
-                                    color: Colors.purple,
-                                    child: VideoPlayerItem(controller: _controllers[index]),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    specialprices[index],
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                      
+            child: CarouselSlider.builder(
+              itemCount: specialvideos.length,
+              options: CarouselOptions(
+                height: MediaQuery.of(context).size.height * 0.7,
+                enlargeCenterPage: true,
+                enableInfiniteScroll: false,
+                autoPlay: true, 
+                onPageChanged: (index, reason) {
+                  setState(() {
+                    focusedIndex = index;
+                    print('Focused Item Index: $focusedIndex');
+                  });
+                },
+              ),
+              itemBuilder: (context, index, realIndex) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 5.0),
+                  color: Colors.blue,
+                  child: Chewie(
+                    controller: ChewieController(
+                      videoPlayerController: VideoPlayerController.network(specialvideos[index]),
+                      autoPlay: index == focusedIndex,
+                      looping: true,
+                       showControls: false, // Set to false to hide controls
+                        aspectRatio: 9 / 6, // Adjust aspect ratio as needed
+                        allowMuting: true,
+                         // Allow muting the video
+                        // Show mute icon
+                        autoInitialize: true,
+                      // Other ChewieController options as needed
+                    ),
+                  
+                  ),
+                );
+              },
+            ),
+                     
                     ),
                   ),
                   Container(
@@ -360,21 +345,21 @@ Future<void> initializeVideoPlayers() async {
   }
 }
 
-class VideoPlayerItem extends StatefulWidget {
-  final VideoPlayerController controller;
+// class VideoPlayerItem extends StatefulWidget {
+//   final VideoPlayerController controller;
 
-  const VideoPlayerItem({Key? key, required this.controller});
+//   const VideoPlayerItem({Key? key, required this.controller});
 
-  @override
-  _VideoPlayerItemState createState() => _VideoPlayerItemState();
-}
+//   @override
+//   _VideoPlayerItemState createState() => _VideoPlayerItemState();
+// }
 
-class _VideoPlayerItemState extends State<VideoPlayerItem> {
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: widget.controller.value.aspectRatio,
-      child: VideoPlayer(widget.controller),
-    );
-  }
-}
+// class _VideoPlayerItemState extends State<VideoPlayerItem> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return AspectRatio(
+//       aspectRatio: widget.controller.value.aspectRatio,
+//       child: VideoPlayer(widget.controller),
+//     );
+//   }
+// }

@@ -43,6 +43,8 @@ dev_dependencies:
   easy_localization: ^3.0.3
   http: ^1.2.0
   video_player: ^2.8.2  
+  chewie: ^1.7.4
+  carousel_slider: ^4.2.1
 
 
   
